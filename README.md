@@ -1,13 +1,13 @@
 <div align="center">
 
-# 💻 Laptop Price Prediction & ML Benchmarking
+# 💻 Laptop Price Estimation: Linear vs. Regularized vs. Neural Regression
 
-**An end-to-end Machine Learning regression study predicting market prices of laptops through feature engineering and comparative model evaluation.**
+**A comparative Machine Learning study evaluating Baseline, L1/L2 Regularized Linear Models, and Multi-Layer Perceptrons (MLP) for hardware price prediction.**
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=for-the-badge&logo=python&logoColor=white)
-![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?style=for-the-badge&logo=jupyter&logoColor=white)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)
-![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)
+![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?style=for-the-badge&logo=jupyter&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 </div>
 
@@ -15,66 +15,61 @@
 
 ## 📌 Project Overview
 
-Hardware pricing is heavily driven by complex non-linear interactions between components (CPU clock speeds, RAM size/type, storage combinations, GPU tier, display resolution, and brand equity).
+Predicting market prices of laptops is a regression task driven by both linear hardware scaling (e.g., RAM capacity, storage) and non-linear interactions (e.g., brand premiums, display PPI, discrete GPU tiers).
 
-This project formulates **Laptop Price Estimation** as a supervised regression task. Using an empirical dataset of laptops (`Laptop-Price.csv`), it implements a complete data science pipeline:
-1. **Exploratory Data Analysis (EDA):** Identifying price distributions, component correlations, and outliers.
-2. **Feature Engineering:** Parsing raw strings (e.g., CPU manufacturer/clock speed, SSD/HDD storage splits, resolution PPI) into structured numerical features.
-3. **Model Benchmarking:** Training and comparing multiple linear and ensemble regression models to find the highest predictive accuracy.
+This project benchmarks a progression of regression architectures:
+1. **Unregularized Baseline:** Standard Ordinary Least Squares (OLS) Linear Regression.
+2. **L1 Regularization (Lasso):** Induces feature sparsity and automatic feature selection.
+3. **L2 Regularization (Ridge):** Mitigates multicollinearity among hardware specs via weight decay.
+4. **Non-Linear Deep Architecture (MLPRegressor):** A Multi-Layer Perceptron neural network optimized across multiple hidden layer configurations.
 
 ---
 
-## 🔄 Machine Learning Pipeline
+## 🛡️ Leakage-Free ML Methodology
+
+To ensure strict scientific rigor and avoid **Data Leakage**, all transformations and scaling steps are bundled inside **`sklearn.pipeline.Pipeline`**:
+- `StandardScaler` is fitted exclusively on training folds during Cross-Validation.
+- Hyperparameter tuning is driven via **`GridSearchCV`** scoring on $R^2$.
 
 ```
-  [ Raw Dataset (CSV) ]
-            │
-            ▼
- 1. Data Cleaning & Parsing   ───► Extracts RAM in GB, separates SSD/HDD, parses CPU/GPU
-            │
-            ▼
- 2. Exploratory Data Analysis ───► Correlation heatmaps, feature distributions, outlier handling
-            │
-            ▼
- 3. Feature Transformation    ───► One-Hot Encoding (Brands/OS), Log-transform (Target Price), Scaling
-            │
-            ▼
- 4. Model Training & Tuning   ───► Evaluates multiple regressors via Cross-Validation & GridSearch
-            │
-            ▼
- 5. Evaluation & Comparison   ───► Compares R² Score, MAE, and RMSE across models
+ [ Train Folds ] ──► [ StandardScaler ] ──► [ Regressor ] ──► [ Cross-Validation Scoring ]
+                                                                             │
+ [ Held-out Test Split ] ───────────────────────────────────────────► [ Final evaluate_model() ]
 ```
 
 ---
 
-## 🧠 Evaluated Models
+## 🧠 Evaluated Models & Search Space
 
-The benchmark compares traditional linear baselines against non-linear tree-based ensembles:
+| Model | Pipeline Structure | Cross-Validation | Hyperparameter Grid / Search Space |
+| :--- | :--- | :--- | :--- |
+| **Linear Regression** | `StandardScaler` + `LinearRegression()` | 5-Fold CV | Baseline (No hyperparameters) |
+| **Lasso Regression (L1)** | `StandardScaler` + `Lasso(max_iter=50000, tol=0.01)` | 5-Fold CV | `alpha`: `[0.001, 0.01, 0.1, 1, 10, 100]` |
+| **Ridge Regression (L2)** | `StandardScaler` + `Ridge(random_state=SEED)` | 5-Fold CV | `alpha`: `[0.1, 1, 10, 100, 200, 500, 1000]` |
+| **MLP Perceptron (NN)** | `StandardScaler` + `MLPRegressor(max_iter=2000)` | 3-Fold CV | • `hidden_layer_sizes`: `[(64, 32), (100, 50), (128, 64, 32)]`<br>• `alpha`: `[0.0001, 0.001, 0.01, 0.1]`<br>• `learning_rate_init`: `[0.001, 0.01]` |
 
-- **Linear Models:** Linear Regression, Ridge, Lasso
-- **Instance-Based:** K-Nearest Neighbors (KNN) Regressor
-- **Support Vector Machines:** SVR (Support Vector Regressor)
-- **Tree Ensembles:** Decision Trees, Random Forest Regressor, Gradient Boosting / XGBoost
+---
 
-### Evaluation Metrics
-Models are evaluated on held-out test splits using:
-- **$R^2$ Score (Coefficient of Determination):** Proportion of variance explained by the model.
-- **MAE (Mean Absolute Error):** Average magnitude of prediction error in monetary terms.
-- **RMSE (Root Mean Squared Error):** Penalty metric prioritizing larger deviation errors.
+## 📊 Evaluation Metrics
+
+All models are finally benchmarked on the unseen test set using a unified `evaluate_model` pipeline returning:
+- **$R^2$ Score (Coefficient of Determination):** Explains the proportion of price variance captured.
+- **MAE (Mean Absolute Error):** Measures average monetary prediction deviation in real currency units.
+- **RMSE (Root Mean Squared Error):** Penalizes larger deviation errors caused by premium/luxury outliers.
 
 ---
 
 ## 📁 Repository Structure
 
 ```text
-├── Laptop-Price.csv           # Raw dataset containing laptop hardware specs & prices
-├── PROGETTO_FINALE_ML.ipynb   # Complete Jupyter Notebook (EDA, preprocessing, training, evaluation)
+├── Laptop-Price.csv           # Raw dataset containing laptop hardware specs & target prices
+├── PROGETTO_FINALE_ML.ipynb   # Complete Jupyter Notebook (EDA, Pipelines, GridSearchCV, Evaluation)
 └── README.md                  # Project documentation
 ```
 
 ---
 
-## 🚀 Getting Started & How to Run
+## 🚀 How to Run the Notebook
 
 ### 1. Clone the Repository
 ```bash
@@ -82,9 +77,7 @@ git clone https://github.com/BillyErMago/Laptop_comparison_ML.git
 cd Laptop_comparison_ML
 ```
 
-### 2. Set Up Environment & Install Dependencies
-Create a virtual environment and install the required scientific stack:
-
+### 2. Set Up Environment & Dependencies
 ```bash
 python -m venv venv
 
@@ -93,13 +86,11 @@ source venv/bin/activate
 # On Windows:
 venv\Scripts\activate
 
-# Install dependencies
+# Install required packages
 pip install jupyter pandas numpy scikit-learn matplotlib seaborn
 ```
 
-### 3. Launch the Notebook
-Start Jupyter Notebook or JupyterLab to inspect the interactive analysis and training steps:
-
+### 3. Launch the Jupyter Notebook
 ```bash
 jupyter notebook PROGETTO_FINALE_ML.ipynb
 ```
