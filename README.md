@@ -73,8 +73,8 @@ All models are finally benchmarked on the unseen test set using a unified `evalu
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/BillyErMago/Laptop_comparison_ML.git
-cd Laptop_comparison_ML
+git clone https://github.com/BillyErMago/Laptop_Price_Comparison_ML.git
+cd Laptop_Price_Comparison_ML
 ```
 
 ### 2. Set Up Environment & Dependencies
